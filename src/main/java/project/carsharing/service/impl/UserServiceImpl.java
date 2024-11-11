@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.carsharing.dto.user.UserDto;
 import project.carsharing.dto.user.UserRegistrationDto;
-import project.carsharing.dto.user.UserRequestDto;
+import project.carsharing.dto.user.UserUpdateRequestDto;
 import project.carsharing.dto.user.UserUpdateRoleDto;
 import project.carsharing.exception.RegistrationException;
 import project.carsharing.mapper.UserMapper;
@@ -19,9 +19,9 @@ import project.carsharing.service.UserService;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private UserRepository userRepository;
-    private UserMapper userMapper;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDto findById(Long id) {
@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserDto update(Long id, UserRequestDto requestDto) {
+    public UserDto update(Long id, UserUpdateRequestDto requestDto) {
         User user = findUserById(id);
         userMapper.updateUser(requestDto, user);
         userRepository.save(user);
@@ -60,7 +60,9 @@ public class UserServiceImpl implements UserService {
 
     private User findUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User with id " + id + " not found")
+                );
     }
 
     private void existsByEmail(UserRegistrationDto requestDto) {

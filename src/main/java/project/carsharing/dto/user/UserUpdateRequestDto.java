@@ -2,11 +2,9 @@ package project.carsharing.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Length;
 import project.carsharing.validation.FieldMatch;
 
 @Getter
@@ -16,14 +14,9 @@ import project.carsharing.validation.FieldMatch;
         second = "repeatPassword",
         message = "The password fields must match"
 )
-public class UserRegistrationDto {
-    @NotNull
-    @Length(min = 2, max = 255)
+public class UserUpdateRequestDto {
     private String firstName;
-    @NotNull
-    @Length(min = 2, max = 255)
     private String lastName;
-    @NotNull
     @Email
     private String email;
     @NotBlank

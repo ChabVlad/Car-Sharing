@@ -2,7 +2,7 @@ package project.carsharing.service;
 
 import project.carsharing.dto.user.UserDto;
 import project.carsharing.dto.user.UserRegistrationDto;
-import project.carsharing.dto.user.UserRequestDto;
+import project.carsharing.dto.user.UserUpdateRequestDto;
 import project.carsharing.dto.user.UserUpdateRoleDto;
 
 public interface UserService {
@@ -11,7 +11,7 @@ public interface UserService {
 
     UserDto updateRole(Long id, UserUpdateRoleDto requestDto);
 
-    UserDto update(Long id, UserRequestDto requestDto);
+    UserDto update(Long id, UserUpdateRequestDto requestDto);
 
     UserDto register(UserRegistrationDto requestDto);
 }
