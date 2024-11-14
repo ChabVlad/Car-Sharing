@@ -10,14 +10,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.carsharing.dto.car.CarDto;
 import project.carsharing.dto.car.CarRequestDto;
-import project.carsharing.dto.car.CarSearchParameters;
 import project.carsharing.model.Car;
 import project.carsharing.service.CarService;
 
-@RestController("/cars")
+@RestController
+@RequestMapping("/cars")
 @RequiredArgsConstructor
 public class CarController {
     private final CarService carService;
@@ -50,10 +51,5 @@ public class CarController {
     @DeleteMapping("/{id}")
     public void deleteCar(@PathVariable Long id) {
         carService.deleteById(id);
-    }
-
-    @GetMapping("/search")
-    public List<CarDto> searchCar(CarSearchParameters parameters) {
-        return carService.search(parameters);
     }
 }

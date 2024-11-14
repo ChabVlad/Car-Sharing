@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-user1
+      author: vlad
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: email
+                  value: bad.boy@email.com
+              - column:
+                  name: password
+                  value: $2a$10$AduObuNZCl3w.z39uaTzSur114EA2y4RsmgoI3xEZySbEcVGw8PpW #qwerty4321
+              - column:
+                  name: first_name
+                  value: Bad
+              - column:
+                  name: last_name
+                  value: Boy
+              - column:
+                  name: role
+                  value: MANAGER
+  - changeSet:
+      id: insert-user2
+      author: vlad
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: email
+                  value: agent@email.com
+              - column:
+                  name: password
+                  value: $2a$10$6uh.FMhX4h0X1hlEzP41NOnwT/hImEOjOU6r6.7Gz0jXuHiTA6h2y #qwerty1234
+              - column:
+                  name: first_name
+                  value: Johny
+              - column:
+                  name: last_name
+                  value: English
+              - column:
+                  name: role
+                  value: CUSTOMER

@@ -1,6 +1,7 @@
 package project.carsharing.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -9,21 +10,36 @@ import org.springframework.transaction.annotation.Transactional;
 import project.carsharing.dto.rental.RentalDto;
 import project.carsharing.dto.rental.RentalRequestDto;
 import project.carsharing.dto.rental.RentalReturnDateDto;
+import project.carsharing.exception.TryToGetFromEmptyInventoryException;
 import project.carsharing.mapper.RentalMapper;
+import project.carsharing.model.Car;
 import project.carsharing.model.Rental;
+import project.carsharing.model.User;
+import project.carsharing.repository.car.CarRepository;
 import project.carsharing.repository.rental.RentalRepository;
 import project.carsharing.service.RentalService;
 
 @Service
 @RequiredArgsConstructor
 public class RentalServiceImpl implements RentalService {
-    private RentalRepository rentalRepository;
-    private RentalMapper rentalMapper;
+    private final RentalRepository rentalRepository;
+    private final RentalMapper rentalMapper;
+    private final CarRepository carRepository;
 
     @Transactional
     @Override
-    public Rental addRental(RentalRequestDto requestDto) {
+    public Rental addRental(RentalRequestDto requestDto, User user) {
         Rental rental = rentalMapper.toModel(requestDto);
+        rental.setRentalDate(LocalDate.now());
+        rental.setUser(user);
+
+        Car car = carRepository
+                .findById(requestDto.getCarId()).orElseThrow(EntityNotFoundException::new);
+        if (car.getInventory() < 1) {
+            throw new TryToGetFromEmptyInventoryException("This car not available for now: " + car);
+        }
+        rental.setCar(car);
+        rental.setActive(true);
         return rentalRepository.save(rental);
     }
 
@@ -48,8 +64,13 @@ public class RentalServiceImpl implements RentalService {
 
     @Transactional
     @Override
-    public RentalDto updateActualReturnDate(RentalReturnDateDto requestDto, Long id) {
-        Rental rental = findRentalById(id);
+    public RentalDto updateActualReturnDate(
+            RentalReturnDateDto requestDto,
+            Long userId
+    ) {
+        Rental rental = rentalRepository.findByUserId(userId);
+        rental.setActive(false);
+        rentalRepository.save(rental);
         rentalMapper.updateModel(requestDto, rental);
         return rentalMapper.toDto(rental);
     }

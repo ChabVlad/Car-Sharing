@@ -7,14 +7,16 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.carsharing.dto.user.UserDto;
-import project.carsharing.dto.user.UserRequestDto;
+import project.carsharing.dto.user.UserUpdateRequestDto;
 import project.carsharing.dto.user.UserUpdateRoleDto;
 import project.carsharing.model.User;
 import project.carsharing.service.UserService;
 
-@RestController("/users")
+@RestController
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -33,7 +35,7 @@ public class UserController {
 
     @PatchMapping("/me")
     public UserDto updateCurrentUser(
-            @RequestBody UserRequestDto requestDto,
+            @RequestBody UserUpdateRequestDto requestDto,
             Authentication authentication
     ) {
         return userService.update(getCurrentUserId(authentication), requestDto);

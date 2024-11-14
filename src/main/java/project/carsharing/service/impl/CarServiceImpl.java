@@ -3,25 +3,22 @@ package project.carsharing.service.impl;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.carsharing.dto.car.CarDto;
 import project.carsharing.dto.car.CarRequestDto;
-import project.carsharing.dto.car.CarSearchParameters;
 import project.carsharing.mapper.CarMapper;
 import project.carsharing.model.Car;
 import project.carsharing.repository.car.CarRepository;
-import project.carsharing.repository.car.CarSpecificationBuilder;
 import project.carsharing.service.CarService;
 
 @Service
 @RequiredArgsConstructor
 public class CarServiceImpl implements CarService {
-    private CarRepository carRepository;
-    private CarMapper carMapper;
-    private CarSpecificationBuilder carSpecificationBuilder;
+    private final CarRepository carRepository;
+    private final CarMapper carMapper;
 
     @Transactional
     @Override
@@ -30,9 +27,18 @@ public class CarServiceImpl implements CarService {
         return carRepository.save(car);
     }
 
-    @Override
+    /*@Override
     public List<CarDto> findAll(Pageable pageable) {
         List<Car> cars = (List<Car>) carRepository.findAll(pageable);
+        return cars.stream()
+                .map(carMapper::toDto)
+                .toList();
+    }*/
+
+    @Override
+    public List<CarDto> findAll(Pageable pageable) {
+        Page<Car> carPage = carRepository.findAll(pageable);
+        List<Car> cars = carPage.getContent();
         return cars.stream()
                 .map(carMapper::toDto)
                 .toList();
@@ -56,23 +62,6 @@ public class CarServiceImpl implements CarService {
     @Override
     public void deleteById(Long id) {
         carRepository.deleteById(id);
-    }
-
-    @Override
-    public List<CarDto> search(CarSearchParameters searchParameters) {
-        Specification<Car> carSpecification = carSpecificationBuilder.build(searchParameters);
-        return carRepository.findAll(carSpecification)
-                .stream()
-                .map(carMapper::toDto)
-                .toList();
-    }
-
-    @Transactional
-    @Override
-    public void increaseInventory(Long id) {
-        Car car = findCarById(id);
-        car.setInventory(car.getInventory() + 1);
-        carRepository.save(car);
     }
 
     @Transactional

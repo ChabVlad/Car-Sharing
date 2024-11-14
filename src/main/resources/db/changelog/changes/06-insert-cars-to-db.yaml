@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-cars-to-db
+      author: vlad
+      changes:
+        - insert:
+            tableName: cars
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: model
+                  value: Millennium
+              - column:
+                  name: brand
+                  value: Falcon
+              - column:
+                  name: type
+                  value: SEDAN
+              - column:
+                  name: inventory
+                  value: 3
+              - column:
+                  name: daily_fee
+                  value: 550

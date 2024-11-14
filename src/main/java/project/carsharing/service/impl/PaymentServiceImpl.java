@@ -11,6 +11,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -75,10 +76,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto checkSuccessfulPayment(Long rentalId) {
-        Payment payment = paymentRepository.findByRentalId(rentalId)
+    public PaymentDto checkSuccessfulPayment(String sessionId) {
+        Payment payment = paymentRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Can't find payment with rental ID: " + rentalId)
+                        "Can't find payment with rental ID: " + sessionId)
                 );
 
         Session session = retrieveStripeSession(payment.getSessionId());
@@ -91,7 +92,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String cancelPayment(Long rentalId) {
+    public String cancelPayment(String sessionId) {
         return CANCEL_URL_MESSAGE;
     }
 
@@ -107,25 +108,43 @@ public class PaymentServiceImpl implements PaymentService {
     private long calculateAmount(CreatePaymentSessionRequestDto request) {
         Rental rental = findById(request.rentalId());
         BigDecimal dailyFee = rental.getCar().getDailyFee();
-        BigDecimal moneyToPay = BigDecimal.valueOf(
-                rental.getReturnDate().getDayOfYear() - rental.getRentalDate().getDayOfYear()
-                )
-                .multiply(dailyFee);
 
-        if (PaymentType.FINE.equals(request.paymentType())) {
-            BigDecimal overdueAmount = BigDecimal.valueOf(
-                    rental.getActualReturnDate().getDayOfYear()
-                            - rental.getReturnDate().getDayOfYear()
-                    )
-                    .multiply(dailyFee)
-                    .multiply(FINE_MULTIPLIER);
-            moneyToPay = moneyToPay.add(overdueAmount);
+        // Calculate days between rental and return date, accounting for year transitions
+        long rentalDays = ChronoUnit.DAYS.between(rental.getRentalDate(), rental.getReturnDate());
+        if (rentalDays <= 0) {
+            throw new IllegalArgumentException("Return date must be after the rental date.");
         }
 
-        return moneyToPay.longValue();
+        BigDecimal moneyToPay = BigDecimal.valueOf(rentalDays).multiply(dailyFee);
+
+        // Calculate overdue amount if applicable
+        if (PaymentType.FINE.equals(request.paymentType())
+                && rental.getActualReturnDate() != null) {
+            long overdueDays = ChronoUnit.DAYS
+                    .between(rental.getReturnDate(), rental.getActualReturnDate());
+            if (overdueDays > 0) {
+                BigDecimal overdueAmount = BigDecimal.valueOf(overdueDays)
+                        .multiply(dailyFee)
+                        .multiply(FINE_MULTIPLIER);
+                moneyToPay = moneyToPay.add(overdueAmount);
+            }
+        }
+
+        long finalAmount = moneyToPay.longValue();
+        if (finalAmount <= 0) {
+            throw new IllegalArgumentException("Total amount must be a positive value.");
+        }
+
+        return finalAmount;
     }
 
-    private Session createStripeSession(long moneyToPay, CreatePaymentSessionRequestDto request) {
+    private Session createStripeSession(
+            long moneyToPay,
+            CreatePaymentSessionRequestDto request
+    ) {
+        BigDecimal amountInCents = BigDecimal
+                .valueOf(moneyToPay).multiply(BigDecimal.valueOf(UNIT_AMOUNT_MULTIPLIER));
+
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(PaymentMethodType.CARD)
                 .setMode(Mode.PAYMENT)
@@ -135,7 +154,7 @@ public class PaymentServiceImpl implements PaymentService {
                         LineItem.builder()
                                 .setPriceData(LineItem.PriceData.builder()
                                         .setCurrency(Currency.USD.getValue())
-                                        .setUnitAmount(moneyToPay * UNIT_AMOUNT_MULTIPLIER)
+                                        .setUnitAmount(amountInCents.longValue())
                                         .setProductData(LineItem.PriceData.ProductData.builder()
                                                 .setName(PRODUCT_NAME)
                                                 .setDescription(PRODUCT_DESCRIPTION)
@@ -155,7 +174,8 @@ public class PaymentServiceImpl implements PaymentService {
     private Payment savePayment(
             Session session,
             CreatePaymentSessionRequestDto request,
-            Long moneyToPay) {
+            Long moneyToPay
+    ) {
         Payment payment = new Payment();
         payment.setSessionId(session.getId());
         payment.setSessionUrl(session.getUrl());

@@ -9,7 +9,7 @@ public interface PaymentService {
 
     PaymentDto createPaymentSession(CreatePaymentSessionRequestDto request);
 
-    PaymentDto checkSuccessfulPayment(Long rentalId);
+    PaymentDto checkSuccessfulPayment(String sessionId);
 
-    String cancelPayment(Long rentalId);
+    String cancelPayment(String sessionId);
 }

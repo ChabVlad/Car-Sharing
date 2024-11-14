@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.carsharing.dto.rental.RentalDto;
 import project.carsharing.dto.rental.RentalRequestDto;
@@ -18,25 +20,30 @@ import project.carsharing.model.User;
 import project.carsharing.service.CarService;
 import project.carsharing.service.RentalService;
 
-@RestController("/rentals")
+@RestController
+@RequestMapping("/rentals")
 @RequiredArgsConstructor
 public class RentalController {
     private final RentalService rentalService;
     private final CarService carService;
 
     @PostMapping
-    public Rental addRental(@RequestBody RentalRequestDto requestDto) {
+    public Rental addRental(
+            @RequestBody RentalRequestDto requestDto,
+            Authentication authentication
+    ) {
+        User user = (User) authentication.getPrincipal();
         carService.decreaseInventory(requestDto.getCarId());
-        return rentalService.addRental(requestDto);
+        return rentalService.addRental(requestDto, user);
     }
 
-    @GetMapping("/?user_id={id}&is_active={isActive}")
+    @GetMapping
     public List<RentalDto> getRentalsByUserId(
-            @PathVariable Long id,
-            @PathVariable boolean isActive,
+            @RequestParam Long userId,
+            @RequestParam boolean isActive,
             Pageable pageable
     ) {
-        return rentalService.findAllRentalsByUserId(id, isActive, pageable);
+        return rentalService.findAllRentalsByUserId(userId, isActive, pageable);
     }
 
     @GetMapping("/{id}")
