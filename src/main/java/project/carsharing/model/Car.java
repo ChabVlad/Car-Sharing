@@ -33,7 +33,7 @@ public class Car {
     @Column(nullable = false)
     private int inventory;
     @Column(name = "daily_fee", nullable = false)
-    private BigDecimal dailyFee;
+    private double dailyFee;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private boolean isDeleted;
 }

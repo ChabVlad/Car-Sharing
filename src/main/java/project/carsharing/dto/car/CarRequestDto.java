@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import project.carsharing.model.CarType;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class CarRequestDto {

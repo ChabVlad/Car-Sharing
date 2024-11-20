@@ -27,14 +27,6 @@ public class CarServiceImpl implements CarService {
         return carRepository.save(car);
     }
 
-    /*@Override
-    public List<CarDto> findAll(Pageable pageable) {
-        List<Car> cars = (List<Car>) carRepository.findAll(pageable);
-        return cars.stream()
-                .map(carMapper::toDto)
-                .toList();
-    }*/
-
     @Override
     public List<CarDto> findAll(Pageable pageable) {
         Page<Car> carPage = carRepository.findAll(pageable);
